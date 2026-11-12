@@ -7,6 +7,8 @@ chrome.storage.sync.get({ disableMute: true, disableCC: true }, (items) => { //g
     closedCaptionsCheckbox.checked = items.disableCC;
 });
 
+versionDisplayer.innerHTML = `Version ${chrome.runtime.getVersion()}`
+
 closedCaptionsCheckbox.addEventListener("change", CheckboxChange)
 muteCheckbox.addEventListener("change", CheckboxChange)
 
