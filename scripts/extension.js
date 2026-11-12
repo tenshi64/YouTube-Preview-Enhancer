@@ -1,168 +1,425 @@
-var divPreview = document.querySelector(".html5-video-container");
-const css = '.preview-volume-volumeSlider{opacity: 0.5; transition: 0.5s; -webkit-transition: 0.5s; -moz-transition: 0.5s; outline: 2px solid #3d3d3dff; border-radius: 5px; background:black;} .preview-volume-volumeSlider:hover{opacity: 0.8; outline: 4px solid #3d3d3dff} .preview-volume-volumeSlider::-webkit-slider-thumb{border-radius: 5px; outline: 2px solid #3d3d3dff;} .preview-volume-volumeSlider::-moz-range-thumb{border-radius: 5px; outline: 2px solid #3d3d3dff;}';
+//-----------------------------------------------------------------------------------------------
+//IF THE HTML CODE STRUCTURE OF THE YOUTUBE PAGE CHANGES, THESE CONSTANTS MUST BE UPDATED ACCORDINGLY
+const MUTE_BUTTON_CLASS = "ytmMuteButtonButton"; //className of the mute button
+const CC_BUTTON_CLASS = "ytmClosedCaptioningButtonButton"; //className of the closed captions button
+
+const MUTE_ATTRIBUTE = "aria-label"; //attribute that shows whether the video is muted (attached to mute button)
+const CC_ATTRIBUTE = "aria-pressed"; //attribute that shows whether the closed captions are being used or not (attached to closed captions button)
+
+const MUTE_ATTRIBUTE_VALUE = "unmute"; //value which the extension wants to change by clicking the button, THIS MEANS THE VIDEO IS MUTED
+const CC_ATTRIBUTE_VALUE = "true"; //value which the extension wants to change by clicking the button, THIS MEANS THE VIDEO IS USING CLOSED CAPTIONS
+
+const PREVIEW_ID = "inline-preview-player"; //ID of a <div> that is a parent of a parent of <video>, that we're looking for
+const PAID_PROMOTION_TAGNAME = "ytm-paid-content-overlay-renderer"; //tagName for the paid promotion block: <ytm-paid-content-overlay-renderer>
+//-----------------------------------------------------------------------------------------------
+
+const CSS_SCRIPT = `
+.preview-volume-slider
+{
+    margin: 20px;
+    -webkit-appearance: none;
+    appearance: none;
+
+    outline: 12px solid rgba(0, 0, 0, 0.6);
+    border-radius: 2%;
+    position: relative;
+    background-color: white;
+    height: 4px;
+    width: 100px;
+    cursor: pointer;
+}
+
+.preview-volume-slider:hover
+{
+    -webkit-appearance: none;
+    appearance: none;
+    outline: 12px solid rgba(44, 44, 44, 0.6);
+}
+
+.preview-volume-slider::-webkit-slider-thumb /*Handle in webkit browsers*/
+{
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    z-index: 100;
+    position: relative;
+}
+
+.preview-volume-slider::-moz-range-thumb /*Handle in firefox browser*/
+{
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    z-index: 100;
+    position: relative;
+}
+`;
+
+var canDisableClosedCaptions = true; //disables closed captions on start, in preview
+var canDisableMute = true; //disables mute on start, in preview
+
 var style = null;
 var volumeSlider = null;
-var volume = 0.1; //in range between 0 - 1
-var videoPlayers = null;
-var wasShortVideo;
+const allVideoPlayers = [];
 
-/*CUSTOMIZABLE VALUES, NOTE: THE LARGER THE VALUES, THE MORE RANDOM MOMENTARY INCREASES IN SOUND VOLUME (AND BETTER PERFORMANCE)*/
-const volumeDelay = 2; //in milliseconds, delay for setting a volume of the video preview
-const searchDelay = 20; //in milliseconds, delay for searching for an HTML element
+var muteButton = null;
+var closedCaptionsButton = null;
 
-var url = window.location.toString();
+var url;
+var currentVolume = 0.5;
+var muteButtonClickedByUser = false; //whether the user muted the video preview
+var closedCaptionsButtonClickedByUser = false; //whether the user enabled closed captions in the video preview
+
+url = window.location.toString();
+
+//main function
 if(url.toLowerCase().includes("youtube"))
 {
-    if(!divPreview)
-    {
-        var storagedVolume = localStorage.getItem("volume");
+    //get the values saved in storage
+    chrome.storage.sync.get({disableMute: true, disableCC: true}, (items) => {
+        canDisableMute = items.disableMute;
+        canDisableClosedCaptions = items.disableCC;
 
-        if (storagedVolume != null)
-        {
-            if(parseFloat(storagedVolume) < 0 || parseFloat(storagedVolume) > 1)
+        NormalizeVolume(localStorage.getItem("volume"));
+
+        const mutationObserver = new MutationObserver((_mutations) => {
+            for(const _mutation of _mutations)
             {
-                storagedVolume = 0.5;
-                localStorage.setItem("volume", "0.5");
+                if(_mutation.type == "attributes")
+                {
+                    if(_mutation.target.className == MUTE_BUTTON_CLASS)
+                    {
+                        DisableMuteAndClosedCaptions();
+                    }
+                    else if(_mutation.target.className == CC_BUTTON_CLASS)
+                    {
+                        DisableMuteAndClosedCaptions();
+                    }
+                    else if(_mutation.target.tagName != null && _mutation.target.tagName.toLowerCase() == "video")
+                    {
+                        DisableMuteAndClosedCaptions();
+                        ManipulateVideoArray(_mutation.target);
+                    }
+                }
+                else
+                {
+                    //detected some nodes being removed
+                    _mutation.removedNodes.forEach(_node => 
+                    {
+                        if(_node.tagName != null && _node.tagName.toLowerCase() == "video")
+                        {
+                            ManipulateVideoArray(_node, true);
+                        }
+                        else if(_node.className == MUTE_BUTTON_CLASS)
+                        {
+                            muteButtonClickedByUser = false;
+                            muteButton = null;
+                        }
+                        else if(_node.className == CC_BUTTON_CLASS)
+                        {
+                            closedCaptionsButtonClickedByUser = false;
+                            closedCaptionsButton = null;
+                        }
+                        else if(_node.querySelectorAll)
+                        {
+                            var videoPlayers = _node.querySelectorAll("video");
+                            videoPlayers.forEach(_video => {
+                                ManipulateVideoArray(_video, true);
+                                DisableMuteAndClosedCaptions();
+                            });
+
+                            if(!IsNull(muteButton))
+                            {
+                                const muteButtons = _node.querySelectorAll("." + MUTE_BUTTON_CLASS);
+                                muteButtons.forEach(_muteBtn => {
+                                    muteButtonClickedByUser = false;
+                                    muteButton = null;
+                                    DisableMuteAndClosedCaptions();
+                                });
+                            }
+
+                            if(!IsNull(closedCaptionsButton))
+                            {
+                                const ccButtons = _node.querySelectorAll("." + CC_BUTTON_CLASS);
+                                ccButtons.forEach(_ccBtn => {
+                                    closedCaptionsButtonClickedByUser = false;
+                                    closedCaptionsButton = null;
+                                    DisableMuteAndClosedCaptions();
+                                });
+                            }
+                        }
+                    });
+                    
+                    //detected some nodes being added
+                    _mutation.addedNodes.forEach(_node =>
+                    {
+                        if(_node.tagName != null && _node.tagName.toLowerCase() == "video")
+                        {
+                            ManipulateVideoArray(_node);
+                            DisableMuteAndClosedCaptions();
+                            CreateSlider();
+                            PrepareVideoAndSlider(_node);
+                        }
+                        else if(_node.tagName != null && _node.tagName == PAID_PROMOTION_TAGNAME)
+                        {
+                            _node.remove();
+                        }
+                        else if(_node.className == MUTE_BUTTON_CLASS)
+                        {
+                            muteButtonClickedByUser = false;
+                            muteButton = _node;
+                            muteButton.addEventListener("click", (_event) => {OnButtonClick(_event, muteButton);});
+                            DisableMuteAndClosedCaptions();
+                        }
+                        else if(_node.className == CC_BUTTON_CLASS)
+                        {
+                            closedCaptionsButtonClickedByUser = false;
+                            closedCaptionsButton = _node;
+                            closedCaptionsButton.addEventListener("click", (_event) => {OnButtonClick(_event, closedCaptionsButton);});
+                            DisableMuteAndClosedCaptions();
+                        }
+                        else if(_node.querySelectorAll)
+                        {
+                            var videoPlayers = _node.querySelectorAll("video");
+                            videoPlayers.forEach(_video => {
+                                ManipulateVideoArray(_video);
+                                DisableMuteAndClosedCaptions();
+                                CreateSlider();
+                                PrepareVideoAndSlider(_video);
+                            });
+
+                            const paidPromotions = _node.querySelectorAll(PAID_PROMOTION_TAGNAME);
+                            paidPromotions.forEach(_promotion => {
+                                _promotion.remove();
+                            });
+
+                            if(IsNull(muteButton))
+                            {
+                                const muteButtons = _node.querySelectorAll("." + MUTE_BUTTON_CLASS);
+                                muteButtons.forEach(_muteBtn => {
+                                    muteButtonClickedByUser = false;
+                                    muteButton = _muteBtn;
+                                    muteButton.addEventListener("click", (_event) => {OnButtonClick(_event, muteButton);});
+                                    DisableMuteAndClosedCaptions();
+                                });
+                            }
+
+                            if(IsNull(closedCaptionsButton))
+                            {
+                                const ccButtons = _node.querySelectorAll("." + CC_BUTTON_CLASS);
+                                ccButtons.forEach(_ccBtn => {
+                                    closedCaptionsButtonClickedByUser = false;
+                                    closedCaptionsButton = _ccBtn;
+                                    closedCaptionsButton.addEventListener("click", (_event) => {OnButtonClick(_event, closedCaptionsButton);});
+                                    DisableMuteAndClosedCaptions();
+                                });
+                            }
+                        }
+                    });
+                }
             }
-            volume = parseFloat(localStorage.getItem("volume"));
+        });
+
+        mutationObserver.observe(document.body, { attributes: true, childList: true, subtree: true });
+    });
+}
+
+//getting volume saved the last time from localStorage and setting it as a value of currentVolume
+function NormalizeVolume(_volume)
+{
+    if (!IsNull(_volume))
+    {
+        _volume = parseFloat(_volume);
+
+        if(isNaN(_volume))
+        {
+            _volume = 0.5;
+            localStorage.setItem("volume", "0.5");
         }
         else
         {
-            storagedVolume = 0.5;
-            localStorage.setItem("volume", "0.5");
-        }
-        WaitForElement(".html5-video-container", WaitForVideoPlayer, true);
-    }
-    else
-    {
-        WaitForVideoPlayer();
-    }
-}
-
-function WaitForElement(_className, _nextFunction, setDivPreview = false)
-{
-    var node = document.querySelector(_className);
-
-    if(!node)
-    {
-        var interval = setInterval(() =>
-        {
-            node = document.querySelector(_className);
-            if(node)
+            if(_volume < 0 || _volume > 1)
             {
-                if(setDivPreview)
-                {
-                    divPreview = node;
-                }
-                _nextFunction();
-                clearInterval(interval);
+                _volume = 0.5;
+                localStorage.setItem("volume", "0.5");
             }
-        }, searchDelay);
+        }
     }
     else
     {
-        if(setDivPreview)
-        {
-            divPreview = node;
-        }
-        _nextFunction();
+        _volume = 0.5;
+        localStorage.setItem("volume", "0.5");
     }
-}
 
-function WaitForVideoPlayer()
-{
-    WaitForElement(".video-stream.html5-main-video", SetupEverything);  
-}
+    localStorage.setItem("volume", _volume);
+    currentVolume = _volume;
 
-function SpawnSlider()
-{
-    if(volumeSlider != null)
+    if(!IsNull(volumeSlider))
     {
-        volumeSlider.remove();
+        volumeSlider.value = currentVolume;
+    }
+}
+
+//Adds the slider and listeners to preview video players
+function PrepareVideoAndSlider(_video)
+{
+    DisableMuteAndClosedCaptions();
+    _video.addEventListener('loadstart', DisableMuteAndClosedCaptions);
+    _video.addEventListener('volumechange', DisableMuteAndClosedCaptions);
+    _video.addEventListener('loadeddata', DisableMuteAndClosedCaptions);
+    _video.addEventListener('unload', DisableMuteAndClosedCaptions);
+    _video.addEventListener('loadedmetadata', DisableMuteAndClosedCaptions);
+    _video.addEventListener('canplay', DisableMuteAndClosedCaptions);
+    _video.addEventListener('canplaythrough', DisableMuteAndClosedCaptions);       
+    _video.addEventListener('playing', DisableMuteAndClosedCaptions);
+    _video.addEventListener("play", DisableMuteAndClosedCaptions);
+    if(!IsNull(volumeSlider))
+    {
+        if(!IsNull(_video.parentNode) && !IsNull(_video.parentNode.parentNode) && _video.parentNode.parentNode.id == PREVIEW_ID && volumeSlider.parentNode != _video.parentNode)
+        {
+            _video.parentNode.appendChild(volumeSlider);
+        }
+    }
+}
+
+//function that creates a slider, and adds <style> for it
+function CreateSlider()
+{
+    //if sliders exists already, delete it
+    if(!IsNull(volumeSlider))
+    {
+        return;
     }
 
-    //spawn the slider
+    //add the slider
     volumeSlider = document.createElement("input");
     volumeSlider.setAttribute("type", "range");
-    volumeSlider.setAttribute("class", "preview-volume-volumeSlider");
+    volumeSlider.setAttribute("class", "preview-volume-slider");
     volumeSlider.setAttribute("step", "0.01");
     volumeSlider.setAttribute("min", "0");
     volumeSlider.setAttribute("max", "1");
-    volumeSlider.setAttribute("value", volume);
-    volumeSlider.style.zIndex = "100";
+    volumeSlider.setAttribute("value", currentVolume);
+
+    ChangeVisualsOnSlider();
 
     volumeSlider.addEventListener("input", () => {
-        ChangeVolumeInAllPlayers(videoPlayers, volume);
-        volume = volumeSlider.value;
-        localStorage.setItem("volume", volume.toString());
-    })
+        NormalizeVolume(volumeSlider.value);
+        ChangeVisualsOnSlider();
+        DisableMuteAndClosedCaptions();
+    });
+
+    volumeSlider.addEventListener("click", _event => {
+        _event.stopPropagation();
+        _event.preventDefault();
+    });
 
     //spawn style, change slider's appearance
-    if(style == null)
+    if(IsNull(style))
     {
         style = document.createElement('style');
-        style.appendChild(document.createTextNode(css));
+        style.textContent = CSS_SCRIPT;
 
-        document.getElementsByTagName('head')[0].appendChild(style);
-    }
-
-    const mediaContainer = document.querySelector("#media-container");
-    videoPlayers = document.querySelectorAll(".video-stream.html5-main-video");
-
-    if(mediaContainer)
-    {
-        mediaContainer.append(volumeSlider);
-    }
-    else
-    {
-        if(volumeSlider != null)
-        {
-            volumeSlider.remove();
-        }
-        volumeSlider = null;
+        document.head.appendChild(style);
     }
 }
 
-function SetupEverything()
+//function that changes visually the volume on the slider
+function ChangeVisualsOnSlider()
 {
-    SpawnSlider();
-
-    setInterval(() =>
-    {
-        url = window.location.toString();
-        if(videoPlayers.length < 2 || (wasShortVideo && !url.toLowerCase().includes("shorts")))
-        {
-            console.log("searching");
-            var _videoPlayers = document.querySelectorAll(".video-stream.html5-main-video");
-
-            if(wasShortVideo && (_videoPlayers[0] != videoPlayers[0] || _videoPlayers[1] != videoPlayers[1]))
-            {
-                wasShortVideo = false;
-            }
-            videoPlayers = _videoPlayers;
-        }
-        ChangeVolumeInAllPlayers(videoPlayers, volume);
-    }, volumeDelay);
+    volumeSlider.style.background = `linear-gradient(to right, white ${currentVolume * 100}%, rgb(116, 116, 116) ${currentVolume * 100}%)`;
 }
 
-function ChangeVolumeInAllPlayers(_videoPlayers, _volume)
+//function that handles volume changing
+function ChangeVolume()
 {
-    if(!url.toLowerCase().includes("shorts"))
+    for(let i = 0; i < allVideoPlayers.length; i++)
     {
-        for(var i = 0; i < _videoPlayers.length; i++)
+        if(IsNull(allVideoPlayers[i]))
         {
-            if(_videoPlayers[i].getAttribute("data-no-fullscreen") != null || _videoPlayers[i].getAttribute("data-no-fullscreen") == true)
+            ManipulateVideoArray(allVideoPlayers[i], true, i);
+        }
+        else
+        {
+            if(allVideoPlayers[i].closest && allVideoPlayers[i].closest("#" + PREVIEW_ID))
             {
-                _videoPlayers[i].volume = _volume;
-                if(volumeSlider == null)
-                {
-                    SpawnSlider();
-                }
+                allVideoPlayers[i].volume = currentVolume;
             }
+        }
+    }
+}
+
+//function that disables closed captions and mute
+function DisableMuteAndClosedCaptions()
+{
+    ChangeVolume();
+    if(!IsNull(muteButton) && canDisableMute && muteButton.getAttribute(MUTE_ATTRIBUTE) != null && muteButton.getAttribute(MUTE_ATTRIBUTE).toLowerCase() == MUTE_ATTRIBUTE_VALUE && !muteButtonClickedByUser) //if the video is muted, but the user doesn't want it to be muted
+    {
+        muteButton.click();
+        muteButtonClickedByUser = false;
+    }
+
+    if(!IsNull(closedCaptionsButton) && canDisableClosedCaptions && closedCaptionsButton.getAttribute(CC_ATTRIBUTE) != null && closedCaptionsButton.getAttribute(CC_ATTRIBUTE).toLowerCase() == CC_ATTRIBUTE_VALUE && !closedCaptionsButtonClickedByUser) //if the video is using closed captions, but the user doesn't want them to be used
+    {
+        closedCaptionsButton.click();
+        closedCaptionsButtonClickedByUser = false;
+    }
+    ChangeVolume();
+}
+
+//function that fires on mute button being clicked, checks if it was user who clicked it
+function OnButtonClick(_event, _button)
+{
+    ChangeVolume();
+    if(_button.className == MUTE_BUTTON_CLASS)
+    {
+        muteButtonClickedByUser = _event.isTrusted;
+    }
+    else if(_button.className == CC_BUTTON_CLASS)
+    {
+        closedCaptionsButtonClickedByUser = _event.isTrusted;
+    }
+}
+
+//function that changes the array which contains all <video> on page
+function ManipulateVideoArray(_element, _deleteThisElement = false, _indexToDelete = -1)
+{
+    if(!_deleteThisElement)
+    {
+        if(allVideoPlayers.length > 0)
+        {
+            if(!allVideoPlayers.includes(_element))
+            {
+                allVideoPlayers.push(_element);
+            }
+        }
+        else
+        {
+            allVideoPlayers.push(_element);
         }
     }
     else
     {
-        wasShortVideo = true;
+        if(_indexToDelete == -1)
+        {
+            allVideoPlayers.splice(allVideoPlayers.indexOf(_element), 1);
+        }
+        else
+        {
+            allVideoPlayers.splice(_indexToDelete, 1);
+        }
     }
+}
+
+//checks if an HTML element exists, isn't empty or undefined
+function IsNull(_element)
+{
+    return (_element == undefined || !_element || _element == null);
 }

@@ -1,8 +1,12 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Preview Fixer",
-    "description": "Made by tenshi",
-    "version": "1.0.1",
+    "name": "YouTube Preview Enhancer",
+    "description": "Improve your video discovery on YouTube: take full control of YouTube previews with built-in volume sliders, custom settings and more!",
+    "version": "1.1.0",
+    "author": "tenshi",
+    "developer": {
+        "name": "tenshi"
+    },
     "icons": {
         "16": "/images/icon.png",
         "48": "/images/icon.png",
@@ -12,5 +16,15 @@
         "matches": ["<all_urls>"],
         "js": ["/scripts/extension.js"],
         "run_at": "document_end"
-    }]
+    }],
+    "action": {
+        "default_popup": "/options/options.html"
+    },
+    "options_ui": {
+        "page": "/options/options.html",
+        "open_in_tab": true
+    },
+    "permissions": [
+        "storage"
+    ]
 }
