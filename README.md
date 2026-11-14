@@ -15,10 +15,10 @@ Improve your video discovery on <b>YouTube</b>: take full control of <b>YouTube<
 
 ## Screenshots
 <p float="left">
-  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="300">
-  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final3_2400x1200.png" width="300">
-  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final4_2400x1200.png" width="300">
-  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final2_2400x1200.png" width="300">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="400">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final3_2400x1200.png" width="400">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final4_2400x1200.png" width="400">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final2_2400x1200.png" width="400">
 </p>
 
 ## How to use:
