@@ -1,37 +1,40 @@
-# YT-Preview-Fixer
-Do you also get annoyed by how loud YouTube video previews can be on the homepage?
-Yeah, me too. That’s why I built this simple browser extension that adds a volume bar to YouTube’s homepage video previews - so you can finally control their sound level without going deaf every time a random preview decides to scream at you.
+<h1><img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/images/icon.png" width="50" align="top"> YouTube Preview Enhancer</h1>
+Improve your video discovery on **YouTube**: take full control of **YouTube** *previews* with built-in volume sliders and more!
 
-# This extension:
-- Adds a volume slider to the top-left corner of each video preview on YouTube’s homepage.
-- Lets you adjust or mute the volume of preview videos independently.
-- Saves your preferred volume level in localStorage, so you don’t have to readjust it every time you reload YouTube.
-- Automatically reduces the volume of previews at a fixed interval (to counter YouTube’s random volume resets).
-- Works in any modern browser (Chrome, Edge, Firefox, Brave, Opera, etc.).
+<img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="900">
 
-# Installation
-Go to the repository page.
+## Description
+**YouTube Preview Enhancer** gives you full control over *video hover previews* on **YouTube**. Stop dealing with *muted previews*, *forced captions* or *missing volume controls* when browsing your feed.
+
+## Features:
+- **Volume Slider**: Adds a built-in volume slider directly inside the preview player. Your preferred volume level is saved automatically across sessions.
+- **Auto-Unmute**: Automatically unmutes hover previews so you can hear videos immediately without clicking (can be toggled on or off in the settings).
+- **Disable Closed Captions**: Automatically turns off closed captions (CC) in previews for an unobstructed view (can be toggled on or off in the settings).
+- **Clutter Removal**: Strips away the "Paid Promotion" banner from the top-left corner of the preview player to free up screen space.
+- **Smooth Audio Transitions**: Prevents sudden volume spikes when moving quickly between thumbnails.
+
+## Screenshots
+<p float="left">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="500">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final3_2400x1200.png" width="500">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final4_2400x1200.png" width="500">
+  <img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final2_2400x1200.png" width="500">
+</p>
+
+## How to use:
+Install the extension, refresh your **YouTube** tab and hover over any video thumbnail. Use the slider in the preview player to adjust the volume or click the extension icon in your browser toolbar to configure your default mute and caption preferences.
+
+## Installation
+> **Note:** Official releases for the **Chrome Web Store** and **Firefox Add-ons** are currently under review and will be available soon. In the meantime, you can install the extension manually:
+- Go to the repository page.
 - Click the green “Code” button → choose “Download ZIP”.
 - Extract the ZIP file somewhere on your computer.
-- Open your browser’s Extensions or Add-ons page.
-- In Chrome/Edge/Brave: go to chrome://extensions/ and enable Developer mode.
+- Open your browser’s Extensions or Add-ons page, and enable Developer Mode.
 - Click “Load unpacked” and select the folder you just extracted.
 - Refresh YouTube. You should now see the volume slider when hovering over videos on the homepage.
 
-# Screenshot
-![Screenshot1](https://github.com/tenshi64/YT-Preview-Fixer/blob/main/screenshots/screenshot.png)
+## Privacy:
+Your settings are stored locally and synced via your browser profile. This extension does not collect, track or transmit any personal data or browsing history.
 
-# Help! YouTube/my PC lags when using this extension
-If your browser or YouTube starts lagging, try this:
-- Go to the extension’s installation folder.
-- Open the folder /scripts.
-- Edit the file extension.js.
-- At the very top, find the line that defines the variable:
-  ```const delay = 2; //in milliseconds``` Increase that number (e.g., 20 or 50).
-- After saving the file, refresh (reload) the extension in your browser’s extensions settings page to apply the change.
-
-# How it works
-This extension runs a simple script that, every few milliseconds (a fixed delay set directly in the code), changes the volume of YouTube’s preview video player on the homepage.
-It basically keeps checking the currently hovered video and makes sure its volume stays at your chosen level because YouTube sometimes randomly resets it to full blast when switching previews.
-
-It’s definitely not the most optimized or elegant solution - in fact, it’s kind of a brute-force approach but after trying several methods, this was the only one that actually worked consistently across browsers.
+## Support & Bug reports:
+Found a bug or have a feature request? You can report issues directly on the project's [GitHub repository](https://github.com/tenshi64/YouTube-Preview-Enhancer/issues) or reach out on our [Discord server](https://discord.com/invite/nKyz5KZwTM).
