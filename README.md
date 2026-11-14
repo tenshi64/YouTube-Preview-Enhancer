@@ -1,7 +1,7 @@
 <h1><img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/images/icon.png" width="50" align="top"> YouTube Preview Enhancer</h1>
-Improve your video discovery on **YouTube**: take full control of **YouTube** *previews* with built-in volume sliders and more!
+Improve your video discovery on <b>YouTube</b>: take full control of <b>YouTube</b> <i>previews</i> with built-in volume sliders and more!
 
-<img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="900">
+<img src="https://github.com/tenshi64/YouTube-Preview-Enhancer/blob/main/screenshots/final-store-screenshots/final1_2400x1200.png" width="1000">
 
 ## Description
 **YouTube Preview Enhancer** gives you full control over *video hover previews* on **YouTube**. Stop dealing with *muted previews*, *forced captions* or *missing volume controls* when browsing your feed.
