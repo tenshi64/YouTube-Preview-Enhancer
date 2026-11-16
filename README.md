@@ -27,8 +27,8 @@ Install the extension, refresh your **YouTube** tab and hover over any video thu
 ## Installation
 
 ### Option 1: Browser Stores (Recommended)
-- **Chrome Web Store:** [Install from Chrome Web Store](https://addons.mozilla.org/en-GB/firefox/addon/youtube-preview-enhancer/)
-- **Firefox Add-ons:** [Install from Firefox Add-ons](https://chromewebstore.google.com/detail/youtube-preview-enhancer/ikhfamnceopipagpjehflnpflckgjfpm)
+- **Chrome Web Store:** [Install from Chrome Web Store](https://chromewebstore.google.com/detail/youtube-preview-enhancer/ikhfamnceopipagpjehflnpflckgjfpm)
+- **Firefox Add-ons:** [Install from Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/youtube-preview-enhancer/)
 
 ### Option 2: Manual Installation (GitHub Releases)
 - Go to the [GitHub Releases](https://github.com/tenshi64/YouTube-Preview-Enhancer/releases) page and download the latest release archive (`.zip`).
