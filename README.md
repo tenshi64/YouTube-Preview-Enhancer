@@ -25,8 +25,19 @@ Improve your video discovery on <b>YouTube</b>: take full control of <b>YouTube<
 Install the extension, refresh your **YouTube** tab and hover over any video thumbnail. Use the slider in the preview player to adjust the volume or click the extension icon in your browser toolbar to configure your default mute and caption preferences.
 
 ## Installation
-> **Note:** Official releases for the **Chrome Web Store** and **Firefox Add-ons** are currently under review and will be available soon. In the meantime, you can install the extension manually:
-- Go to the repository page.
+
+### Option 1: Browser Stores (Recommended)
+- **Chrome Web Store:** [Install from Chrome Web Store](https://addons.mozilla.org/en-GB/firefox/addon/youtube-preview-enhancer/)
+- **Firefox Add-ons:** [Install from Firefox Add-ons](https://chromewebstore.google.com/detail/youtube-preview-enhancer/ikhfamnceopipagpjehflnpflckgjfpm)
+
+### Option 2: Manual Installation (GitHub Releases)
+- Go to the [GitHub Releases](https://github.com/tenshi64/YouTube-Preview-Enhancer/releases) page and download the latest release archive (`.zip`).
+- Extract the ZIP file somewhere on your computer.
+- Open your browser’s Extensions or Add-ons page, and enable Developer Mode.
+- Click “Load unpacked” and select the folder you just extracted.
+- Refresh YouTube. You should now see the volume slider when hovering over videos on the homepage.
+
+### Option 3: Manual Installation (from source)
 - Click the green “Code” button → choose “Download ZIP”.
 - Extract the ZIP file somewhere on your computer.
 - Open your browser’s Extensions or Add-ons page, and enable Developer Mode.
